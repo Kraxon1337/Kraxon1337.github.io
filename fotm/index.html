@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fractal Timeline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #272b30;
+            font-family: Helvetica, sans-serif;
+            overflow-y: scroll;
+        }
+
+        /* Header stuff */
+        .header {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+        }
+
+        .box {
+            margin-top: 20px;
+            margin-bottom: 0px;
+            padding: 0px;
+            position: relative;
+            left: 25%;
+            border-style: solid;
+            border-width: 5px;
+            border-color: #aaa;
+            width: 50%;
+            border-radius: 6px;
+            background-color: #444950;
+            cursor: pointer;
+        }
+
+            .box:hover {
+                background-color: #555;
+            }
+
+        .text {
+            color: #aaa;
+            text-align: center;
+            padding-bottom: 10px;
+        }
+
+
+        /* The actual timeline (the vertical ruler) */
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+            overflow: hidden;
+        }
+
+            /* The actual timeline (the vertical ruler) */
+            .timeline::after {
+                content: '';
+                position: absolute;
+                width: 6px;
+                background-color: #aaa;
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                margin-left: -3px;
+            }
+
+        /* Container around content */
+        .container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+
+            /* The circles on the timeline */
+            .container::after {
+                content: '';
+                position: absolute;
+                width: 25px;
+                height: 25px;
+                right: -17px;
+                background-color: white;
+                border: 4px solid #aaa;
+                top: 15px;
+                border-radius: 50%;
+                z-index: 1;
+            }
+
+            .container.right::after {
+                background-color: #272b30;
+                background-image: url("https://wiki.guildwars2.com/images/4/46/Cross_red.png");
+                background-repeat: no-repeat;
+                background-position-x: 50%;
+                background-position-y: 75%;
+                background-size: 95%;
+                border: 4px solid #aaa;
+            }
+
+            .container.left::after {
+                background-color: #272b30;
+                background-image: url("https://wiki.guildwars2.com/images/5/52/Tick_green.png");
+                background-repeat: no-repeat;
+                background-position-x: 50%;
+                background-position-y: 75%;
+                background-size: 90%;
+                border: 4px solid #aaa;
+            }
+
+        /* Place the container to the left */
+        .left {
+            left: 0;
+        }
+
+        /* Place the container to the right */
+        .right {
+            left: 50%;
+            border-color: red;
+        }
+
+        /* Add arrows to the left container (pointing right) */
+        .left::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            right: 30px;
+            border: medium solid #444950;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent #444950;
+        }
+
+        /* Add arrows to the right container (pointing left) */
+        .right::before {
+            content: " ";
+            height: 0;
+            position: absolute;
+            top: 22px;
+            width: 0;
+            z-index: 1;
+            left: 30px;
+            border: medium solid #444950;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent #444950 transparent transparent;
+        }
+
+        /* Fix the circle for containers on the right side */
+        .right::after {
+            left: -16px;
+        }
+
+        /* The actual content */
+		.content {
+			padding: 20px 30px;
+			background-color: #444950;
+			position: relative;
+			border-radius: 6px;
+		}
+
+		table {
+			font-family: Helvetica, sans-serif;
+			border-collapse: collapse;
+			width: 75%;
+			text-align: center;
+			margin-top: 10px;
+			position: relative;
+			left: 12%;
+			font-size: 14px;
+		}
+
+		td {
+			padding: 2px;
+		}
+
+		tr {
+			background-color: #31363c;
+		}
+
+			tr:nth-child(even) {
+				background-color: #3d444b;
+			}
+
+		
+		li a img {
+			position: relative;
+			top: 3px;
+			height: 16px;
+			width: 16px;
+			margin-right: 5px;
+		}
+
+
+		ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			background-color: #333;
+			position: fixed;
+			top: 0;
+			width: 100%;
+            z-index: 10;
+		}
+
+		li {
+			float: left;
+		}
+
+		li a {
+			display: block;
+			color: #aaa;
+			text-align: center;
+			padding: 14px 16px;
+			text-decoration: none;
+		}
+
+		li a:hover:not(.active) {
+			background-color: #111;
+		}
+
+		li a.active {
+			background-color: #4CAF50;
+            color: white;
+            cursor: default;
+		}
+
+		.raids {
+			margin-top: 70px;
+		}
+
+        /* Media queries - Responsive timeline on screens less than 600px wide */
+        @media screen and (max-width: 600px) {
+            /* Place the timelime to the left */
+            .timeline::after {
+                left: 31px;
+            }
+
+            .box {
+                width: 100%;
+                left: 0%;
+            }
+
+            /* Full-width containers */
+            .container {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+
+                /* Make sure that all arrows are pointing leftwards */
+                .container::before {
+                    left: 60px;
+                    border: medium solid white;
+                    border-width: 10px 10px 10px 0;
+                    border-color: transparent white transparent transparent;
+                }
+
+            /* Make sure all circles are at the same spot */
+            .left::after, .right::after {
+                left: 15px;
+            }
+
+            /* Make all right containers behave like the left ones */
+            .right {
+                left: 0%;
+            }
+
+			.raids {
+				margin-top: 120px;
+			}
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <li>
+                <a href="#" onclick="return false;" class="active">
+                    Fractal Timeline
+                </a>
+            </li>
+            <li>
+                <a href="#" class="" onclick="showDps(); return false;">
+                    <img src="https://wiki.guildwars2.com/images/6/67/Event_swords_%28map_icon%29.png">Show/Hide dps
+                </a>
+            </li>
+            <li>
+                <a href="#" class="" onclick="showAll(); return false;">
+                    <img src="https://wiki.guildwars2.com/images/8/86/Raid_%28map_icon%29.png">Show/Hide all days
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="raids">
+        
+				<div class="header noselect">
+					<div class="box">
+						<div class="text">
+							<h2 style="text-align: center; margin-top: 15px; margin-bottom: 5px;">25.11.2020</h2>
+							<div style="padding: 5px;">
+								 <img src="https://wiki.guildwars2.com/images/2/20/Event_star_red_%28map_icon%29.png"
+									style="position: relative; top: 12px; left: 3px; height: 32px; width: 32px;" title="Total Raid time">
+									<b>Total:</b> 0h 45m 34s
+								 <img src="https://wiki.guildwars2.com/images/d/d4/Casino_Blitz_%28map_icon%29.png"
+									style="position: relative; top: 12px; left: 3px; height: 32px; width: 32px;" title="Fight time">
+									<b>Fight:</b> 0h 27m 29s
+							 </div>
+							<div style="padding: 5px;">
+								<img src="https://wiki.guildwars2.com/images/thumb/b/b0/Red_Boss.png/20px-Red_Boss.png" style="position: relative; top: 4px; left: 0px;"
+									title="# of different bosses">
+									8
+								<img src="https://wiki.guildwars2.com/images/5/52/Tick_green.png" style="position: relative; top: 4px; left: 0px;"
+									title="# of kills">
+									8
+								<img src="https://wiki.guildwars2.com/images/4/46/Cross_red.png" style="position: relative; top: 4px; left: 0px;"
+									title="# of fails">
+									3
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="timeline">
+			<div class="container right">
+				<div class="content">
+					<a href="20201125-220908_elai_fail.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://i.imgur.com/3mlCdI9.png" alt="Elemental Ai, Keeper of the Peak" width="64" height="64" style="float: right;">
+						<h2>Elemental Ai, Keeper of the Peak</h2>
+						<p>22:05:54 &rArr; 22:09:07 (3m 13s)
+					</a>
+					
+					<div title="32.95% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 32.95%, 32.95%, green 67.05%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 3490775">18049 dps</td>
+						<td>34,12%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 2637432">13637 dps</td>
+						<td>25,78%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 1866057">9648 dps</td>
+						<td>18,24%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-221353_elai_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://i.imgur.com/3mlCdI9.png" alt="Elemental Ai, Keeper of the Peak" width="64" height="64" style="float: right;">
+						<h2>Elemental Ai, Keeper of the Peak</h2>
+						<p>22:09:48 &rArr; 22:13:52 (4m 4s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 4870443">21224 dps</td>
+						<td>32,30%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 3974138">17318 dps</td>
+						<td>26,35%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 2721488">11859 dps</td>
+						<td>18,05%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container right">
+				<div class="content">
+					<a href="20201125-221650_drkai_fail.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://i.imgur.com/3mlCdI9.png" alt="Dark Ai, Keeper of the Peak" width="64" height="64" style="float: right;">
+						<h2>Dark Ai, Keeper of the Peak</h2>
+						<p>22:14:33 &rArr; 22:16:49 (2m 16s)
+					</a>
+					
+					<div title="19.54% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 19.54%, 19.54%, green 80.46000000000001%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 3607170">26467 dps</td>
+						<td>29,48%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 3021256">22168 dps</td>
+						<td>24,69%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 2642323">19387 dps</td>
+						<td>21,59%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-222107_drkai_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://i.imgur.com/3mlCdI9.png" alt="Dark Ai, Keeper of the Peak" width="64" height="64" style="float: right;">
+						<h2>Dark Ai, Keeper of the Peak</h2>
+						<p>22:17:49 &rArr; 22:21:06 (3m 17s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 5050081">27398 dps</td>
+						<td>33,78%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 3694476">20043 dps</td>
+						<td>24,71%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 3102386">16831 dps</td>
+						<td>20,75%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-222729_skorv_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://wiki.guildwars2.com/images/c/c1/Skorvald_the_Shattered.jpg" alt="Skorvald the Shattered" width="64" height="64" style="float: right;">
+						<h2>Skorvald the Shattered</h2>
+						<p>22:24:49 &rArr; 22:27:27 (2m 38s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 1637466">10977 dps</td>
+						<td>29,98%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 1243924">8339 dps</td>
+						<td>22,78%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 975375">6539 dps</td>
+						<td>17,86%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-223311_arts_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://wiki.guildwars2.com/images/b/b4/Artsariiv.jpg" alt="Artsariiv" width="64" height="64" style="float: right;">
+						<h2>Artsariiv</h2>
+						<p>22:30:14 &rArr; 22:33:10 (2m 56s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 2214574">12977 dps</td>
+						<td>37,80%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 1149982">6739 dps</td>
+						<td>19,63%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 1094859">6416 dps</td>
+						<td>18,69%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-223726_arkk_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://wiki.guildwars2.com/images/5/5f/Arkk.jpg" alt="Arkk" width="64" height="64" style="float: right;">
+						<h2>Arkk</h2>
+						<p>22:34:30 &rArr; 22:37:24 (2m 54s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 3235811">19519 dps</td>
+						<td>32,92%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 2236037">13488 dps</td>
+						<td>22,75%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 2000815">12069 dps</td>
+						<td>20,35%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container right">
+				<div class="content">
+					<a href="20201125-223919_mama_fail.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="http://dulfy.net/wp-content/uploads/2016/11/gw2-nightmare-fractal-teaser.jpg" alt="MAMA" width="64" height="64" style="float: right;">
+						<h2>MAMA</h2>
+						<p>22:39:16 &rArr; 22:39:18 (0m 2s)
+					</a>
+					
+					<div title="100% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 100%, 100%, green 0%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 0">0 dps</td>
+						<td>0,00%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Nakano.6351</td> 
+						<td title="Total Damage: 0">0 dps</td>
+						<td>0,00%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>CrescentCrown.2816</td> 
+						<td title="Total Damage: 0">0 dps</td>
+						<td>0,00%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-224130_mama_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="http://dulfy.net/wp-content/uploads/2016/11/gw2-nightmare-fractal-teaser.jpg" alt="MAMA" width="64" height="64" style="float: right;">
+						<h2>MAMA</h2>
+						<p>22:40:04 &rArr; 22:41:29 (1m 25s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 1550686">18597 dps</td>
+						<td>30,32%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 1284047">15399 dps</td>
+						<td>25,10%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 1132151">13577 dps</td>
+						<td>22,13%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-224718_siax_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://wiki.guildwars2.com/images/d/dc/Siax_the_Corrupted.jpg" alt="ch17028-173" width="64" height="64" style="float: right;">
+						<h2>ch17028-173</h2>
+						<p>22:45:50 &rArr; 22:47:16 (1m 26s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 2072052">26131 dps</td>
+						<td>34,58%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 1272299">16045 dps</td>
+						<td>21,23%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 1220171">15388 dps</td>
+						<td>20,36%</td>
+					</tr></table>
+				</div>
+			</div>
+			<div class="container left">
+				<div class="content">
+					<a href="20201125-225129_ensol_kill.html" target="_blank" style="color: #aaa; text-decoration: none;">
+						<img src="https://wiki.guildwars2.com/images/5/57/Champion_Toxic_Hybrid.jpg" alt="Ensolyss of the Endless Torment" width="64" height="64" style="float: right;">
+						<h2>Ensolyss of the Endless Torment</h2>
+						<p>22:48:10 &rArr; 22:51:28 (3m 18s)
+					</a>
+					
+					<div title="0% left" style="background: rgba(0, 0, 0, 0)
+						linear-gradient(to right, red 0%, 0%, green 100%)
+						repeat scroll 0% 0%; height: 10px; width: 100%; border-radius: 5px; margin-top: 3px;">
+					</div><table class="dpsTable">
+					<tr style="color: #aaa">
+						<td>Horus.9685</td> 
+						<td title="Total Damage: 3707329">19726 dps</td>
+						<td>26,84%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Schaki.6392</td> 
+						<td title="Total Damage: 3282352">17465 dps</td>
+						<td>23,77%</td>
+					</tr>
+					<tr style="color: #aaa">
+						<td>Kraxon.1235</td> 
+						<td title="Total Damage: 3099364">16491 dps</td>
+						<td>22,44%</td>
+					</tr></table>
+				</div>
+			</div>
+			</div>
+    </div>
+
+    <script>
+		var coll = document.getElementsByClassName("box");
+		var i;
+
+		for (i = 0; i < coll.length; i++) {
+			coll[i].addEventListener("click", function() {
+			this.classList.toggle("active");
+			var content = this.parentElement.nextElementSibling;
+			if (content.style.display === "block") {
+				content.style.display = "none";
+			} else {
+				content.style.display = "block";
+			}
+			});
+        }
+
+        function showAll() {
+			var days = document.getElementsByClassName("box");
+            var i;
+			var init = days[0].parentElement.nextElementSibling.style.display;
+
+            for (i = 0; i < days.length; i++) {
+				var content = days[i].parentElement.nextElementSibling;
+				if (init === "block") {
+					content.style.display = "none";
+				} else {
+					content.style.display = "block";
+				}
+			}
+        }
+
+		function showDps() {
+            var dpsTables = document.getElementsByClassName("dpsTable");
+			var i;
+
+			for (i = 0; i < dpsTables.length; i++) {
+				if (dpsTables[i].style.display === "none") {
+					dpsTables[i].style.display = "table";
+                } else {
+					dpsTables[i].style.display = "none";
+                }
+            }
+  		} 
+    </script>
+</body>
+</html>
