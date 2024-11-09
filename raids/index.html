@@ -375,6 +375,35 @@
             </div>
         </div>
 
+                <div class="raids">
+        <div class="header noselect">
+            <div class="box">
+                <div class="text">
+                    <h2 id="pbs" style="text-align: center; margin-top: 15px; margin-bottom: 5px;"></h2>
+                </div>
+            </div>
+        </div>
+    
+        <div style="
+            display: none;
+            position: relative;
+            max-width: 1300px;
+            margin: 0 auto;
+            overflow: hidden;"
+        >
+            <div style="
+                padding: 10px 40px;
+                position: relative;
+                background-color: inherit;
+                margin: 0 auto;
+                width: 50%;"
+            >
+                <div class="content">
+                    <iframe width="515" height="1350" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS3IF23y57gy-mcOTGq4qD9D6Bb7BPwVUpLo3vznllujl-YCK3C9jmdZwn3iEDQXCnuzs8-vaP47st-/pubhtml?gid=949559545&amp;single=true&amp;widget=false&amp;headers=false&range=H1:N28&chrome=false"></iframe>
+                </div>
+            </div>
+        </div>
+
     <div class="raids">
         
 				<div class="header noselect">
@@ -25245,6 +25274,15 @@
 			</div>
 			</div>
     </div>
+
+    <script>
+        (() => {
+            rand = (a) => a[(Math.random() * a.length) | 0];
+            const foodstrings = ['Food', 'Food'];
+            const randomtext = document.getElementById('randomfood');
+            randomtext.innerText = rand(foodstrings);
+        })();
+    </script>
 
     <script>
         var coll = document.getElementsByClassName("box");
